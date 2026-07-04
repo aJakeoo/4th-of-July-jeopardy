@@ -64,11 +64,9 @@ at the repo root automatically.
   freeware lookalike ("Aka-AcidGR-Compacta" by Cybertronical Design,
   explicitly marked free by its foundry), carried over from the source
   repo.
-- `assets/img/peacock-logo.png` is also carried over from the source
-  repo's branding (used for the QR-corner logo and the tile-reveal
-  animation image) — it's a peacock, not a 4th of July image. Swap it for
-  an eagle/star/firework asset before a real event if you want the visual
-  to match the new theme.
+- The source repo's peacock logo image is gone — the footer logo and the
+  tile-reveal animation now use the 🎆 emoji directly (as text, not an
+  image asset), and the favicon is an inline SVG wrapping the same emoji.
 - Firestore is initialized with `experimentalForceLongPolling` since
   guest wifi and proxies often choke on the default streaming transport —
   worth the extra chattiness for reliability.

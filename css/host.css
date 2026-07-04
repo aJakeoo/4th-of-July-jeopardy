@@ -244,7 +244,8 @@
 }
 
 .join-footer__logo {
-  height: 76px;
+  font-size: 56px;
+  line-height: 1;
   flex-shrink: 0;
   display: block;
 }
@@ -272,8 +273,9 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  height: 62%;
-  width: auto;
+  display: inline-block;
+  font-size: 40vh;
+  line-height: 1;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s;
