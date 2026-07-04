@@ -1,26 +1,21 @@
-// Firebase project: THIS APP NEEDS ITS OWN FIRESTORE PROJECT.
+// Firebase project: th-jeopardy
 // Loaded as an ES module directly from the CDN — no npm, no build step.
 // The apiKey below is a public web client key (safe to ship in a static
 // site); access control is enforced by Firestore security rules, not by
 // keeping this value secret. See firestore.rules for the rules to publish.
-//
-// This is a copy of the sync logic from student-government-jeopardy, but
-// deliberately NOT pointed at that project's live Firestore — sharing one
-// `rooms/main` doc between two unrelated games (same GitHub Pages account,
-// same origin) would let them stomp on each other's board/score state.
-// Create a new Firebase project (Firestore, native mode), register a web
-// app in it, and paste its config values in below before deploying.
+// This project is dedicated to this app — it does not share Firestore
+// with student-government-jeopardy.
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { initializeFirestore, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey: 'REPLACE_WITH_YOUR_FIREBASE_API_KEY',
-  authDomain: 'REPLACE_WITH_YOUR_PROJECT.firebaseapp.com',
-  projectId: 'REPLACE_WITH_YOUR_PROJECT_ID',
-  storageBucket: 'REPLACE_WITH_YOUR_PROJECT.firebasestorage.app',
-  messagingSenderId: 'REPLACE_WITH_YOUR_SENDER_ID',
-  appId: 'REPLACE_WITH_YOUR_APP_ID',
+  apiKey: 'AIzaSyAh5N_ADVzGnAQFCoV-8TyOZmpNqwuOwvc',
+  authDomain: 'th-jeopardy.firebaseapp.com',
+  projectId: 'th-jeopardy',
+  storageBucket: 'th-jeopardy.firebasestorage.app',
+  messagingSenderId: '979740524804',
+  appId: '1:979740524804:web:9fb4f2a6403eaac20f1051',
 };
 
 const app = initializeApp(firebaseConfig);

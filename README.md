@@ -18,18 +18,19 @@ Presidents & the 4th.
 
 ## Firebase setup
 
-**This app needs its own Firebase project** — it does not share one with
-`student-government-jeopardy`. `js/firebase-config.js` currently has
-placeholder values.
+This app has its own dedicated Firebase project (`th-jeopardy`) — it does
+not share Firestore with `student-government-jeopardy`. `js/firebase-config.js`
+is already wired up with that project's config.
 
-1. Create a new Firestore project (native mode) in the Firebase console,
-   register a web app in it, and paste the resulting config into
-   `js/firebase-config.js`.
-2. Publish `firestore.rules` (Firestore → Rules tab, or `firebase deploy
-   --only firestore:rules` with the Firebase CLI). Without this the app
-   can't read/write the room document.
-3. That's it — no Auth, no other products. `rooms/main` holds the board
-   state (`currentTile`, `buzzLock`, answered tiles) and a `players`
+1. **Publish `firestore.rules`** before relying on this for a real event
+   (Firestore → Rules tab, or `firebase deploy --only firestore:rules`
+   with the Firebase CLI). The project was created "in test mode," which
+   only opens read/write for 30 days and then locks everyone out with no
+   warning — `firestore.rules` in this repo replaces that with a
+   permanent (still fully open, no-auth) rule scoped to `rooms/main` and
+   its `players` subcollection, matching what test mode already allows.
+2. No Auth, no other products needed. `rooms/main` holds the board state
+   (`currentTile`, `buzzLock`, answered tiles) and a `players`
    subcollection (one doc per device, keyed by a random id generated on
    first visit to `buzzer.html`). Deleting `rooms/main` and its `players`
    subcollection resets the game.
