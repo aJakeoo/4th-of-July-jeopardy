@@ -184,3 +184,16 @@ subscribePlayers((players) => {
   latestPlayers = players;
   render();
 });
+
+// isHostActive() compares Date.now() to the room's last heartbeat, but
+// render() otherwise only runs inside the subscribe callbacks above —
+// which only fire when the room document actually changes. Once the host
+// stops heartbeating (tab closed/crashed), the document stops changing,
+// so those callbacks never fire again and the staleness check never gets
+// re-evaluated against the current clock: the buzzer would silently stay
+// on the last screen it saw, forever, instead of noticing the host is
+// gone. Re-rendering on a plain timer forces that check to run regardless
+// of whether Firestore has anything new to say.
+setInterval(() => {
+  if (latestRoom) render();
+}, 2000);
