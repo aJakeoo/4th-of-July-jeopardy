@@ -1,4 +1,4 @@
-/* 4th of July Jeopardy — shared design tokens
+/* 4th of July Jeopardy: shared design tokens
    Red/white/blue theme layered onto the original grid/layout system
    (retheme of the CCS Student Government Jeopardy design tokens). */
 
@@ -10,7 +10,7 @@
 }
 
 :root {
-  /* Colors — navy #0A3161, red #B31942, white, gold #FFD700 accent */
+  /* Colors: navy #0A3161, red #B31942, white, gold #FFD700 accent */
   --color-bg: #0A3161;
   --color-bg-grid: #082848;
   --color-footer: #051B33;

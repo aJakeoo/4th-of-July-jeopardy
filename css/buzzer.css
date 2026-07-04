@@ -1,4 +1,4 @@
-/* Buzzer — phone screen, thumb-friendly. */
+/* Buzzer: phone screen, thumb-friendly. */
 
 .buzzer-root {
   height: 100vh;
@@ -239,6 +239,13 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.buzz-button--queued {
+  background: #e0d6ee;
+  color: var(--color-bg);
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .buzz-button__line1 {
   font-family: var(--font-callout);
   font-size: 42px;
@@ -275,6 +282,10 @@
 }
 
 .buzz-status--active {
+  color: var(--color-purple);
+}
+
+.buzz-status--queued {
   color: var(--color-purple);
 }
 

@@ -1,4 +1,4 @@
-// 4th of July Jeopardy — question bank
+// 4th of July Jeopardy: question bank
 // 6 categories, 5 clues each at $100/$200/$300/$400/$500.
 
 export const CATEGORIES = [
@@ -167,7 +167,7 @@ export const CATEGORIES = [
       },
       {
         value: 300,
-        question: 'This fifth president died on July 4, 1831 — the third president to die on Independence Day.',
+        question: 'This fifth president died on July 4, 1831, the third president to die on Independence Day.',
         answer: 'Who is James Monroe?',
       },
       {
@@ -177,7 +177,7 @@ export const CATEGORIES = [
       },
       {
         value: 500,
-        question: 'Jefferson and Adams both died on July 4, 1826 — exactly this many years after the Declaration was adopted.',
+        question: 'Jefferson and Adams both died on July 4, 1826, exactly this many years after the Declaration was adopted.',
         answer: 'What is 50?',
       },
     ],

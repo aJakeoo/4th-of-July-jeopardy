@@ -1,4 +1,4 @@
-import { subscribeRoom, subscribePlayers, joinRoom, buzzIn, isHostActive } from './room.js';
+import { subscribeRoom, subscribePlayers, joinRoom, buzzIn, isHostActive, MAX_BUZZ_ORDER } from './room.js';
 
 const NAME_KEY = 'julyJeopardyName';
 const PLAYER_ID_KEY = 'julyJeopardyPlayerId';
@@ -26,7 +26,7 @@ function fmt(n) {
 
 function generatePlayerId() {
   // crypto.randomUUID() needs a secure context (HTTPS/localhost) and
-  // throws on plain-HTTP LAN testing, so fall back to a Math.random id —
+  // throws on plain-HTTP LAN testing, so fall back to a Math.random id:
   // this only needs to be unique per device, not cryptographically strong.
   if (window.crypto && typeof window.crypto.randomUUID === 'function') {
     return window.crypto.randomUUID();
@@ -43,7 +43,7 @@ if (!playerId) {
 }
 
 let playerName = localStorage.getItem(NAME_KEY) || '';
-// Which host game session this device last joined/knows about — used to
+// Which host game session this device last joined/knows about: used to
 // detect "the host started a new game" vs. "my own page just refreshed
 // mid-game", which need different treatment (rejoin from scratch vs.
 // silently resume).
@@ -79,7 +79,8 @@ nameInput.addEventListener('keydown', (e) => {
 buzzButton.addEventListener('click', () => {
   if (!latestRoom) return;
   const tile = latestRoom.currentTile;
-  if (!tile || tile.phase !== 'question' || latestRoom.buzzLock) return;
+  const order = latestRoom.buzzOrder || [];
+  if (!tile || tile.phase !== 'question' || order.length >= MAX_BUZZ_ORDER || order.includes(playerId)) return;
   buzzIn(playerId, latestRoom.buzzToken);
 });
 
@@ -88,7 +89,7 @@ function render() {
   const room = latestRoom;
   const players = latestPlayers;
 
-  // The host board wiped everyone and started fresh — anyone who was
+  // The host board wiped everyone and started fresh: anyone who was
   // playing under the old session gets bounced back to name entry.
   if (room.hostSessionId !== knownHostSessionId) {
     knownHostSessionId = room.hostSessionId;
@@ -126,14 +127,19 @@ function render() {
     waitingDisplay.hidden = false;
   }
 
-  const buzzedSelf = room.buzzLock === playerId;
-  const buzzedOther = !!room.buzzLock && !buzzedSelf;
-  const buzzerActive = !!tile && tile.phase === 'question' && !room.buzzLock;
-  const buzzedOtherName = buzzedOther && players[room.buzzLock] ? players[room.buzzLock].name : 'Someone';
+  const order = room.buzzOrder || [];
+  const myRank = order.indexOf(playerId);
+  const buzzedFirst = myRank === 0;
+  const buzzedLater = myRank > 0;
+  const buzzedOther = order.length > 0 && myRank === -1;
+  const buzzerActive = !!tile && tile.phase === 'question' && myRank === -1 && order.length < MAX_BUZZ_ORDER;
+  const winnerName = buzzedOther && players[order[0]] ? players[order[0]].name : 'Someone';
 
-  buzzButton.classList.remove('buzz-button--active', 'buzz-button--won', 'buzz-button--lost');
-  if (buzzedSelf) {
+  buzzButton.classList.remove('buzz-button--active', 'buzz-button--won', 'buzz-button--lost', 'buzz-button--queued');
+  if (buzzedFirst) {
     buzzButton.classList.add('buzz-button--won');
+  } else if (buzzedLater) {
+    buzzButton.classList.add('buzz-button--queued');
   } else if (buzzedOther) {
     buzzButton.classList.add('buzz-button--lost');
   } else if (buzzerActive) {
@@ -141,13 +147,16 @@ function render() {
   }
   buzzButton.style.cursor = buzzerActive ? 'pointer' : 'default';
 
-  buzzStatus.classList.remove('buzz-status--won', 'buzz-status--lost', 'buzz-status--active');
-  if (buzzedSelf) {
+  buzzStatus.classList.remove('buzz-status--won', 'buzz-status--lost', 'buzz-status--active', 'buzz-status--queued');
+  if (buzzedFirst) {
     buzzStatus.classList.add('buzz-status--won');
     buzzStatus.textContent = '🎉 You buzzed first!';
+  } else if (buzzedLater) {
+    buzzStatus.classList.add('buzz-status--queued');
+    buzzStatus.textContent = `You buzzed in #${myRank + 1}`;
   } else if (buzzedOther) {
     buzzStatus.classList.add('buzz-status--lost');
-    buzzStatus.textContent = `${buzzedOtherName} got there first`;
+    buzzStatus.textContent = `${winnerName} got there first`;
   } else if (buzzerActive) {
     buzzStatus.classList.add('buzz-status--active');
     buzzStatus.textContent = 'Tap to buzz in!';
@@ -186,7 +195,7 @@ subscribePlayers((players) => {
 });
 
 // isHostActive() compares Date.now() to the room's last heartbeat, but
-// render() otherwise only runs inside the subscribe callbacks above —
+// render() otherwise only runs inside the subscribe callbacks above,
 // which only fire when the room document actually changes. Once the host
 // stops heartbeating (tab closed/crashed), the document stops changing,
 // so those callbacks never fire again and the staleness check never gets
