@@ -16,7 +16,6 @@ import {
 const boardGrid = document.getElementById('boardGrid');
 const scoreBar = document.getElementById('scoreBar');
 const qrImg = document.getElementById('qrCode');
-const buzzerViewLink = document.getElementById('buzzerViewLink');
 
 const questionOverlay = document.getElementById('questionOverlay');
 const feather = document.getElementById('feather');
@@ -26,6 +25,7 @@ const aqValue = document.getElementById('aqValue');
 const aqQuestion = document.getElementById('aqQuestion');
 const aqAnswer = document.getElementById('aqAnswer');
 const buzzBanner = document.getElementById('buzzBanner');
+const buzzQueue = document.getElementById('buzzQueue');
 const answerBox = document.getElementById('answerBox');
 const answerControls = document.getElementById('answerControls');
 const preAnswerControls = document.getElementById('preAnswerControls');
@@ -47,9 +47,6 @@ function fmt(n) {
 
 // ---- QR code ----
 const buzzerUrl = new URL('buzzer.html', window.location.href).href;
-buzzerViewLink.addEventListener('click', () => {
-  window.location.href = 'buzzer.html';
-});
 
 (function renderQr() {
   const qr = qrcode(0, 'M');
@@ -88,7 +85,7 @@ function renderBoard(room) {
       if (isEmpty) {
         tile.classList.add('tile--empty');
         labelEl.classList.add('tile__label--result');
-        labelEl.textContent = '—';
+        labelEl.textContent = '•';
       } else if (result) {
         tile.classList.add('tile--answered', `tile--${result}`);
         labelEl.classList.add('tile__label--result');
@@ -144,9 +141,20 @@ function renderQuestion(room, players) {
   feather.classList.toggle('show', phase === 'feather');
   questionContent.classList.toggle('show', phase === 'question' || phase === 'answer');
 
-  const buzzedName = room.buzzLock ? (players[room.buzzLock] && players[room.buzzLock].name) : null;
-  buzzBanner.hidden = !buzzedName;
-  if (buzzedName) buzzBanner.textContent = `${buzzedName} BUZZES IN!`;
+  const buzzOrder = room.buzzOrder || [];
+  const firstName = buzzOrder[0] ? (players[buzzOrder[0]] && players[buzzOrder[0]].name) : null;
+  buzzBanner.hidden = !firstName;
+  if (firstName) buzzBanner.textContent = `${firstName} BUZZES IN!`;
+
+  buzzQueue.innerHTML = '';
+  buzzQueue.hidden = buzzOrder.length < 2;
+  buzzOrder.slice(1).forEach((playerId, i) => {
+    const name = players[playerId] ? players[playerId].name : 'Someone';
+    const row = document.createElement('span');
+    row.className = 'buzz-queue__row';
+    row.textContent = `${i + 2}. ${name}`;
+    buzzQueue.appendChild(row);
+  });
 
   const showAnswer = phase === 'answer';
   const showPreAnswer = phase === 'question';
@@ -180,8 +188,8 @@ btnClose.addEventListener('click', () => closeQuestion());
 
 // ---- Boot ----
 // The host board is the game's anchor: every load (first open, refresh,
-// or reopening after being closed) starts a fresh session — wipes all
-// players and resets the board so there's never a stale half-played game
+// or reopening after being closed) starts a fresh session, wiping all
+// players and resetting the board so there's never a stale half-played game
 // or leftover players sitting in the room from before.
 await startHostSession();
 const heartbeatTimer = setInterval(sendHostHeartbeat, HOST_HEARTBEAT_MS);

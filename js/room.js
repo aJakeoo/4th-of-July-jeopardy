@@ -1,13 +1,13 @@
 // Shared Firestore layer for the single game room. Both index.html (host)
-// and buzzer.html (player) import this — it's the only place that talks
+// and buzzer.html (player) import this: it's the only place that talks
 // to Firestore, so the read/write shape stays in one spot.
 //
 // Shape:
-//   rooms/main = { currentTile, buzzLock, board, buzzToken }
+//   rooms/main = { currentTile, buzzOrder, board, buzzToken }
 //   rooms/main/players/{playerId} = { name, score }
 // Players are keyed by a per-device playerId (not name) so two people
 // with the same first name still get separate, individually-tracked
-// scores — the room doc alone can't (and shouldn't) enforce name
+// scores: the room doc alone can't (and shouldn't) enforce name
 // uniqueness at a live event.
 
 import { db } from './firebase-config.js';
@@ -25,7 +25,7 @@ import {
 const ROOM_REF = doc(db, 'rooms', 'main');
 const PLAYERS_COL = collection(db, 'rooms', 'main', 'players');
 
-// A host is only "live" while its tab is open and heartbeating — Firestore
+// A host is only "live" while its tab is open and heartbeating: Firestore
 // has no server-side disconnect hook (that's an RTDB-only feature), so
 // presence is approximated: the host writes hostLastSeen on an interval,
 // and anyone reading the room treats it as stale (host gone) once it's
@@ -34,10 +34,14 @@ const PLAYERS_COL = collection(db, 'rooms', 'main', 'players');
 export const HOST_HEARTBEAT_MS = 4000;
 export const HOST_TIMEOUT_MS = 10000;
 
+// Up to this many playerIds, in the order they buzzed in, are kept per
+// question so the host can see who buzzed first, second, third...
+export const MAX_BUZZ_ORDER = 5;
+
 export const DEFAULT_ROOM = {
   board: {},
   currentTile: null,
-  buzzLock: null,
+  buzzOrder: [],
   buzzToken: 0,
   hostSessionId: null,
   hostLastSeen: null,
@@ -62,7 +66,7 @@ function generateSessionId() {
 
 // The host board is the game's anchor: every time it loads (first open,
 // manual refresh, or reopening after being closed) it starts a brand new
-// session — wipes every player doc and resets the board/buzzer state, so
+// session, wiping every player doc and resetting the board/buzzer state, so
 // there's no stale "half-answered" game sitting around and no leftover
 // players from whoever was in the room before. Buzzer clients detect the
 // new hostSessionId and get bounced back to name entry.
@@ -112,7 +116,7 @@ export async function openQuestion(catIdx, rowIdx) {
       ROOM_REF,
       {
         currentTile: { catIdx, rowIdx, phase: 'feather' },
-        buzzLock: null,
+        buzzOrder: [],
         buzzToken: (room.buzzToken || 0) + 1,
       },
       { merge: true }
@@ -138,16 +142,16 @@ export async function markResult(result) {
     const key = boardKey(tile.catIdx, tile.rowIdx);
     const value = (tile.rowIdx + 1) * 100;
     const board = { ...(room.board || {}), [key]: result };
-    const buzzLock = room.buzzLock;
+    const firstBuzzer = (room.buzzOrder || [])[0];
 
     let playerSnap = null;
     let playerRef = null;
-    if (buzzLock && (result === 'correct' || result === 'incorrect')) {
-      playerRef = doc(db, 'rooms', 'main', 'players', buzzLock);
+    if (firstBuzzer && (result === 'correct' || result === 'incorrect')) {
+      playerRef = doc(db, 'rooms', 'main', 'players', firstBuzzer);
       playerSnap = await tx.get(playerRef);
     }
 
-    tx.set(ROOM_REF, { board, currentTile: null, buzzLock: null }, { merge: true });
+    tx.set(ROOM_REF, { board, currentTile: null, buzzOrder: [] }, { merge: true });
 
     if (playerRef) {
       const curScore = playerSnap.exists() ? playerSnap.data().score || 0 : 0;
@@ -158,7 +162,7 @@ export async function markResult(result) {
 }
 
 export async function closeQuestion() {
-  await updateDoc(ROOM_REF, { currentTile: null, buzzLock: null });
+  await updateDoc(ROOM_REF, { currentTile: null, buzzOrder: [] });
 }
 
 // ---- Player actions ----
@@ -167,8 +171,9 @@ export async function joinRoom(playerId, name) {
   await setDoc(doc(db, 'rooms', 'main', 'players', playerId), { name, score: 0 }, { merge: true });
 }
 
-// Race-safe: only the first transaction to commit while the tile is in
-// 'question' phase and buzzLock is unset actually wins. Also checks
+// Race-safe: every transaction that commits while the tile is in 'question'
+// phase appends its playerId to buzzOrder, so the host can see (in order)
+// who buzzed in first, second, third... up to MAX_BUZZ_ORDER. Also checks
 // buzzToken so a buzz queued from a just-closed question can't reactivate
 // a new one.
 export async function buzzIn(playerId, buzzToken) {
@@ -176,8 +181,10 @@ export async function buzzIn(playerId, buzzToken) {
     const snap = await tx.get(ROOM_REF);
     if (!snap.exists()) return;
     const room = snap.data();
-    if (!room.currentTile || room.currentTile.phase !== 'question' || room.buzzLock) return;
+    if (!room.currentTile || room.currentTile.phase !== 'question') return;
     if (room.buzzToken !== buzzToken) return;
-    tx.set(ROOM_REF, { buzzLock: playerId }, { merge: true });
+    const order = room.buzzOrder || [];
+    if (order.length >= MAX_BUZZ_ORDER || order.includes(playerId)) return;
+    tx.set(ROOM_REF, { buzzOrder: [...order, playerId] }, { merge: true });
   });
 }
