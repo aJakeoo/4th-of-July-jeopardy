@@ -1,0 +1,82 @@
+/* 4th of July Jeopardy — shared design tokens
+   Red/white/blue theme layered onto the original grid/layout system
+   (retheme of the CCS Student Government Jeopardy design tokens). */
+
+@font-face {
+  font-family: 'AC Compacta';
+  src: url('../assets/fonts/AC-Compacta.ttf') format('truetype');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  /* Colors — navy #0A3161, red #B31942, white, gold #FFD700 accent */
+  --color-bg: #0A3161;
+  --color-bg-grid: #082848;
+  --color-footer: #051B33;
+  --color-blue: #123E72;
+  --color-yellow: #FFD700;
+  --color-purple: #B31942;
+  --color-green: #5EB090;
+  --color-green-light: #ceeadb;
+  --color-green-text: #2d8a60;
+  --color-red: #B31942;
+  --color-red-light: #F3C6D3;
+  --color-red-light-2: #F9DEE4;
+  --color-red-text: #7A0F2B;
+  --color-tile-unrevealed: #FFFFFF;
+  --color-tile-border: #0A3161;
+  --color-tile-value: #B31942;
+  --color-skip-bg: #dedede;
+  --color-skip-text: #aaa;
+
+  /* Type */
+  --font-display: 'Alumni Sans SC', sans-serif;   /* dollar values, scores, numbers */
+  --font-callout: 'AC Compacta', sans-serif;      /* BUZZ IN, JEOPARDY!, buttons */
+  --font-body: 'Libre Franklin', sans-serif;       /* questions, answers, running text */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html, body {
+  height: 100%;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+}
+
+button {
+  font-family: inherit;
+}
+
+@keyframes peacockReveal {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes buzzPop {
+  0%   { transform: scale(0.88); opacity: 0; }
+  55%  { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(183, 143, 214, 0.55); }
+  50%      { box-shadow: 0 0 0 20px rgba(183, 143, 214, 0); }
+}
+
+@keyframes correctFlash {
+  0%   { background: var(--color-green); }
+  100% { background: var(--color-green-light); }
+}
+
+@keyframes incorrectFlash {
+  0%   { background: var(--color-red-light); }
+  100% { background: var(--color-red-light-2); }
+}
